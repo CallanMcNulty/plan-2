@@ -1,16 +1,30 @@
 #include <SDL2/SDL.h>
 #include "geometry.h"
+#include "physics.h"
 
 void draw_rectangle(SDL_Renderer* renderer, rect r) {
 	rect_corners corners = get_rect_corners(r);
-	SDL_Point points[5] = {
-		{corners.upper_left.x, corners.upper_left.y},
-		{corners.upper_right.x, corners.upper_right.y},
-		{corners.lower_right.x, corners.lower_right.y},
-		{corners.lower_left.x, corners.lower_left.y},
-		{corners.upper_left.x, corners.upper_left.y}
-	};
-	SDL_RenderDrawLines(renderer, points, 5);
+	// SDL_Point points[5] = {
+	// 	{corners.upper_left.x, corners.upper_left.y},
+	// 	{corners.upper_right.x, corners.upper_right.y},
+	// 	{corners.lower_right.x, corners.lower_right.y},
+	// 	{corners.lower_left.x, corners.lower_left.y},
+	// 	{corners.upper_left.x, corners.upper_left.y}
+	// };
+	// SDL_RenderDrawLines(renderer, points, 5);
+
+	// top
+	SDL_SetRenderDrawColor(renderer, 0x80, 0x00, 0xFF, 0xFF);
+	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.upper_right.x, corners.upper_right.y);
+	// bottom
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x80, 0xFF, 0xFF);
+	SDL_RenderDrawLine(renderer, corners.lower_left.x, corners.lower_left.y, corners.lower_right.x, corners.lower_right.y);
+	// left
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0x80, 0x00, 0xFF);
+	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.lower_left.x, corners.lower_left.y);
+	// right
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x80, 0xFF);
+	SDL_RenderDrawLine(renderer, corners.upper_right.x, corners.upper_right.y, corners.lower_right.x, corners.lower_right.y);
 }
 
 void draw_circle(SDL_Renderer* renderer, circle c) {
@@ -58,4 +72,29 @@ void draw_point_in_rect(SDL_Renderer* renderer, rect r, point p) {
 
 	SDL_Rect sdlrect = {p.x, p.y, 5, 5};
 	SDL_RenderFillRect(renderer, &sdlrect);
+}
+
+void draw_distance_from_point_to_line(SDL_Renderer* renderer, point p, point pl1, point pl2) {
+	SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+	SDL_Rect sdlrect = {p.x, p.y, 5, 5};
+	SDL_RenderFillRect(renderer, &sdlrect);
+
+	float dist = distance_from_point_to_line(pl1, pl2, p);
+	circle c = create_circle_s(p, dist);
+
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	draw_circle(renderer, c);
+
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
+	SDL_RenderDrawLine(renderer, pl1.x, pl1.y, pl2.x, pl2.y);
+}
+
+void draw_normal_from_point(SDL_Renderer* renderer, physics_object obj, point p) {
+	float angle = get_normal_at_external_point(obj, p);
+	SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+	SDL_Rect sdlrect = {p.x, p.y, 5, 5};
+	SDL_RenderFillRect(renderer, &sdlrect);
+	point p2 = move_point_in_direction(p, 50, angle);
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_RenderDrawLine(renderer, p.x, p.y, p2.x, p2.y);
 }
