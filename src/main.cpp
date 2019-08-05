@@ -2,14 +2,13 @@
 and may not be redistributed without written permission.*/
 
 #include <SDL2/SDL.h>
+#include <SDL2_image/SDL_image.h>
 #include <stdio.h>
 #include <chrono>
+#include <string>
 #include "geometry.h"
 #include "drawing.h"
 #include "physics.h"
-
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 720;
 
 const int MS_PER_FRAME = 30;
 
@@ -47,6 +46,16 @@ int main(int argc, char* args[]) {
 		return 1;
 	}
 
+	physics_object camera = create_rect_physics_object(
+		create_rect_s(create_point_s(SCREEN_WIDTH/2, SCREEN_HEIGHT/2), SCREEN_WIDTH, SCREEN_HEIGHT, 0), NO_COLLISION
+	);
+	// camera.movement.push_back(create_movement(1, 5, 1000));
+
+	sprite_animation anim = load_animation_from_disk(renderer, "anim");
+	// set_animation_size(&anim, 200, 'b');
+	rect anim_rect = get_animation_rect(anim, 200, 'b');
+	anim_rect.center.x = 505;
+	anim_rect.center.y = 350;
 
 	std::vector<physics_object> physics(5);
 	physics[0] = create_circle_physics_object( create_circle_s(create_point_s(500, 350), 100), FIXED_COLLISION );
@@ -78,11 +87,11 @@ int main(int argc, char* args[]) {
 	bool quit = false;
 	while(!quit) {
 		current_time = get_time();
-		long elsapsed_time = current_time - previous_time;
+		long elapsed_time = current_time - previous_time;
 
-		if(elsapsed_time >= MS_PER_FRAME) {
+		if(elapsed_time >= MS_PER_FRAME) {
 			previous_time = current_time;
-			// printf("%ld fps\n", 1000/elsapsed_time);
+			// printf("%ld fps\n", 1000/elapsed_time);
 			// physics[3].movement.clear();
 			while(SDL_PollEvent(&e)) {
 				if(e.type == SDL_QUIT) {
@@ -115,13 +124,17 @@ int main(int argc, char* args[]) {
 				radial_movement_speed = 5;
 			}
 			if(key_states[SDL_SCANCODE_UP]) {
-				jump(&physics[3], 20);
+				jump(&physics[3], 10);
 			}
 			set_movement_along(&physics[3], radial_movement_speed);
-			update_physics(&physics);
+			update_physics(&physics, elapsed_time);
 			// a1.x ++;
 			// a2.x ++;
 			// p.x ++;
+
+			move(&camera, elapsed_time);
+			// camera.rect_collider.angle += .001;
+			// camera.rect_collider.width -= 1;
 
 			//Render stuff
 			// for(int i=0; i<SCREEN_WIDTH; i+=50) {
@@ -139,21 +152,21 @@ int main(int argc, char* args[]) {
 					SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 				}
 				if(physics[i].collider == type_circle) {
-					draw_circle(renderer, physics[i].circle_collider);
+					draw_circle(renderer, camera.rect_collider, physics[i].circle_collider);
 				} else {
-					draw_rectangle(renderer, physics[i].rect_collider);
+					draw_rectangle(renderer, camera.rect_collider, physics[i].rect_collider);
 				}
 			}
 
-			draw_rectangle(renderer, r);
-			draw_rectangle(renderer, get_adjacent_rect(r, '8', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '2', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '4', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '6', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '7', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '9', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '3', 20));
-			draw_rectangle(renderer, get_adjacent_rect(r, '1', 20));
+			draw_rectangle(renderer, camera.rect_collider, r);
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '8', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '2', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '4', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '6', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '7', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '9', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '3', 20));
+			draw_rectangle(renderer, camera.rect_collider, get_adjacent_rect(r, '1', 20));
 			// draw_normal_from_point(renderer, physics[2], physics[3].rect_collider.center);
 			// draw_intersecting_segments(renderer, a1, a2, b1, b2);
 			// draw_point_in_rect(renderer, r, p);
@@ -173,6 +186,8 @@ int main(int argc, char* args[]) {
 				SDL_Rect sdlrect = {20, 0, 10, 10};
 				SDL_RenderFillRect(renderer, &sdlrect);
 			}
+
+			draw_sprite_anim(renderer, camera.rect_collider, &anim, anim_rect, elapsed_time);
 
 			SDL_RenderPresent(renderer);
 		}

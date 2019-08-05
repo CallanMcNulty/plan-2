@@ -1,20 +1,61 @@
 {
-    "tasks": [
-        {
-            "type": "shell",
-            "label": "g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-g",
-                "${fileDirname}/../src/*.cpp",
-                "-lSDL2",
-                "-o",
-                "${fileDirname}/../dist/app"
-            ],
-            "options": {
-                "cwd": "/usr/bin"
-            }
-        }
-    ],
-    "version": "2.0.0"
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "g++ build active file",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-F/Library/Frameworks/",
+				"-g",
+				"${workspaceFolder}/src/*.cpp",
+				"-framework",
+				"SDL2",
+				"-framework",
+				"SDL2_image",
+				"-o",
+				"${workspaceFolder}/dist/app"
+			],
+			"options": {
+				"cwd": "/usr/bin"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "create build directory",
+			"command": "mkdir",
+			"args": [
+				"${workspaceFolder}/dist"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "clean",
+			"command": "rm",
+			"args": [
+				"-r",
+				"${workspaceFolder}/dist/"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "move assets",
+			"command": "cp",
+			"args": [
+				"-r",
+				"${workspaceFolder}/assets",
+				"${workspaceFolder}/dist/"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "build",
+			"dependsOn": [
+				"clean",
+				"create build directory",
+				"g++ build active file",
+				"move assets"
+			]
+		}
+	],
+	"version": "2.0.0"
 }

@@ -177,8 +177,25 @@ void jump(physics_object* obj, float force) {
 	vertical->speed += force;
 }
 
+void move(physics_object* obj, float elapsed_time) {
+	if(obj->movement.size() > 0) {
+		movement mvmt = compose(obj->movement);
+		float distance = mvmt.speed * (elapsed_time/1000);
+		if(obj->collider == type_circle) {
+			point new_center = move_point_in_direction(obj->circle_collider.center, mvmt.speed, mvmt.angle);
+			obj->circle_collider.center.x = new_center.x;
+			obj->circle_collider.center.y = new_center.y;
 
-void update_physics(std::vector<physics_object>* objects) {
+		} else if(obj->collider == type_rect) {
+			point new_center = move_point_in_direction(obj->rect_collider.center, mvmt.speed, mvmt.angle);
+			obj->rect_collider.center.x = new_center.x;
+			obj->rect_collider.center.y = new_center.y;
+		}
+	}
+}
+
+
+void update_physics(std::vector<physics_object>* objects, float elapsed_time) {
 	// sort(objects->begin(), objects->end(), sort_physics_objects);
 	// do movement
 	for(int i=0; i < objects->size(); i++) {
@@ -189,17 +206,6 @@ void update_physics(std::vector<physics_object>* objects) {
 		if(working_object->grav_attractor != nullptr) {
 			working_object->rect_collider.angle = get_normal_at_external_point(*working_object->grav_attractor, working_center) + M_PI/2;
 		}
-		// if(working_object->collider == type_rect) {
-		// 	physics_object* aligner = nullptr;
-		// 	if(working_object->supporter != nullptr) {
-		// 		aligner = working_object->supporter;
-		// 	} else if(working_object->grav_attractor != nullptr) {
-		// 		aligner = working_object->grav_attractor;
-		// 	}
-		// 	if(aligner != nullptr) {
-		// 		working_object->rect_collider.angle = get_normal_at_external_point(*aligner, working_center) + M_PI/2;
-		// 	}
-		// }
 
 		// apply gravity
 		movement* gravity = get_movement_by_id(working_object, GRAVITY_MOVEMENT);
@@ -216,24 +222,12 @@ void update_physics(std::vector<physics_object>* objects) {
 				working_object->movement.push_back(create_movement(angle_to_grav_attractor, GRAV_ACCEL, GRAVITY_MOVEMENT));
 			} else {
 				gravity->angle = angle_to_grav_attractor;
-				gravity->speed += GRAV_ACCEL;
+				gravity->speed += GRAV_ACCEL * (elapsed_time/1000);
 			}
 		}
 
 		// move
-		if(working_object->movement.size() > 0) {
-			movement mvmt = compose(working_object->movement);
-			if(working_object->collider == type_circle) {
-				point new_center = move_point_in_direction(working_object->circle_collider.center, mvmt.speed, mvmt.angle);
-				working_object->circle_collider.center.x = new_center.x;
-				working_object->circle_collider.center.y = new_center.y;
-
-			} else if(working_object->collider == type_rect) {
-				point new_center = move_point_in_direction(working_object->rect_collider.center, mvmt.speed, mvmt.angle);
-				working_object->rect_collider.center.x = new_center.x;
-				working_object->rect_collider.center.y = new_center.y;
-			}
-		}
+		move(working_object, elapsed_time);
 	}
 	// Find collisions
 	for(int i=0; i<objects->size(); i++) {

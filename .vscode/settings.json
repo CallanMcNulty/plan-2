@@ -52,6 +52,11 @@
 		"system_error": "cpp",
 		"tuple": "cpp",
 		"type_traits": "cpp",
-		"typeinfo": "cpp"
+		"typeinfo": "cpp",
+		"fstream": "cpp",
+		"__node_handle": "cpp",
+		"__tree": "cpp",
+		"map": "cpp",
+		"optional": "cpp"
 	}
 }

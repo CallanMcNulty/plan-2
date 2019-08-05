@@ -54,8 +54,16 @@ rect_corners get_rect_corners(rect r) {
 	corners.lower_right = lower_right;
 	return corners;
 }
+rect_corners rotate_corners_about(rect_corners corners, point about_point, float angle) {
+	rect_corners new_corners;
+	new_corners.upper_left = rotate_point_about(corners.upper_left, about_point, angle);
+	new_corners.lower_left = rotate_point_about(corners.lower_left, about_point, angle);
+	new_corners.upper_right = rotate_point_about(corners.upper_right, about_point, angle);
+	new_corners.lower_right = rotate_point_about(corners.lower_right, about_point, angle);
+	return new_corners;
+}
 rect get_rect_from_corners(rect_corners corners) {
-	float angle = atan2(corners.upper_left.y - corners.upper_right.y, corners.upper_left.x - corners.upper_right.x);
+	float angle = atan2(corners.upper_right.y - corners.upper_left.y, corners.upper_right.x - corners.upper_left.x);
 	float height = distance(corners.upper_left, corners.lower_left);
 	float width = distance(corners.upper_left, corners.upper_right);
 	float center_x = (corners.upper_left.x + corners.lower_left.x + corners.upper_right.x + corners.lower_right.x) / 4;
@@ -401,4 +409,9 @@ float get_real_angle_between(float angle_a, float angle_b) {
 		diff = M_PI*2 - diff;
 	}
 	return diff;
+}
+
+double rad_to_deg(float radians) {
+	float ratio = radians/(2*M_PI);
+	return (double)(ratio * 360);
 }

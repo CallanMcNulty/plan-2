@@ -24,6 +24,7 @@ typedef struct rect_corners {
 	point lower_right;
 } rect_corners;
 rect_corners get_rect_corners(rect r);
+rect_corners rotate_corners_about(rect_corners corners, point about_point, float angle);
 rect get_rect_from_corners(rect_corners corners);
 rect get_adjacent_rect(rect rect, char direction, float length);
 
@@ -68,5 +69,7 @@ bool circle_contains_rect(circle containing_circle, rect_corners contained_rect)
 bool rect_contains_circle(rect_corners containing_rect, circle contained_circle);
 
 float get_real_angle_between(float angle_a, float angle_b);
+
+double rad_to_deg(float radians);
 
 #endif
