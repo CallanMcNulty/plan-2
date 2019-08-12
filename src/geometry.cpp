@@ -325,10 +325,10 @@ point get_intersection(point a1, point a2, point b1, point b2, bool include_off_
 		approx_lt(intersection_x, std::min(b1.x, b2.x)) ||
 		approx_lt(intersection_y, std::min(a1.y, a2.y)) ||
 		approx_lt(intersection_y, std::min(b1.y, b2.y)) ||
-		approx_lt(intersection_x, std::max(a1.x, a2.x)) ||
-		approx_lt(intersection_x, std::max(b1.x, b2.x)) ||
-		approx_lt(intersection_y, std::max(a1.y, a2.y)) ||
-		approx_lt(intersection_y, std::max(b1.y, b2.y)) )
+		approx_gt(intersection_x, std::max(a1.x, a2.x)) ||
+		approx_gt(intersection_x, std::max(b1.x, b2.x)) ||
+		approx_gt(intersection_y, std::max(a1.y, a2.y)) ||
+		approx_gt(intersection_y, std::max(b1.y, b2.y)) )
 	) {
 		return create_point_s(NAN, NAN);
 	}

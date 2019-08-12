@@ -1,5 +1,11 @@
 TODO
-World file loading
-Systematize Controls, allow rebinding
-Collisions with object interiors
-Holes in objects
+Editor
+	Managing selection
+	Edit physics object
+		Rotate
+		Scale
+	Create physics object
+Physics
+	Fix weird rect-rect collision behavior
+	Collisions with object interiors
+	Holes in objects

@@ -57,6 +57,7 @@
 		"__node_handle": "cpp",
 		"__tree": "cpp",
 		"map": "cpp",
-		"optional": "cpp"
+		"optional": "cpp",
+		"iostream": "cpp"
 	}
 }

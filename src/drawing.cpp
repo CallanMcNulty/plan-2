@@ -5,6 +5,17 @@
 #include "drawing.h"
 #include "geometry.h"
 #include "physics.h"
+#include "editing.h"
+
+point reverse_camera_transform_point(rect camera_rect, point screen_point) {
+	float scale = camera_rect.width/(float)SCREEN_WIDTH;
+	screen_point = rotate_point_about(screen_point, camera_rect.center, camera_rect.angle);
+	screen_point.x = screen_point.x + camera_rect.center.x/scale - SCREEN_WIDTH/2;
+	screen_point.y = screen_point.y + camera_rect.center.y/scale - SCREEN_HEIGHT/2;
+	screen_point.x *= scale;
+	screen_point.y *= scale;
+	return screen_point;
+}
 
 rect camera_transform_rect(rect camera_rect, rect target_rect) {
 	float scale = (float)SCREEN_WIDTH/camera_rect.width;
@@ -12,8 +23,8 @@ rect camera_transform_rect(rect camera_rect, rect target_rect) {
 	target_rect.height *= scale;
 	target_rect.center.x *= scale;
 	target_rect.center.y *= scale;
-	target_rect.center.x = target_rect.center.x - camera_rect.center.x + SCREEN_WIDTH/2;
-	target_rect.center.y = target_rect.center.y - camera_rect.center.y + SCREEN_HEIGHT/2;
+	target_rect.center.x = target_rect.center.x - camera_rect.center.x*scale + SCREEN_WIDTH/2;
+	target_rect.center.y = target_rect.center.y - camera_rect.center.y*scale + SCREEN_HEIGHT/2;
 	return get_rect_from_corners(rotate_corners_about(get_rect_corners(target_rect), camera_rect.center, - camera_rect.angle));
 }
 
@@ -22,8 +33,8 @@ circle camera_transform_circle(rect camera_rect, circle target_circle) {
 	target_circle.radius *= scale;
 	target_circle.center.x *= scale;
 	target_circle.center.y *= scale;
-	target_circle.center.x = target_circle.center.x - camera_rect.center.x + SCREEN_WIDTH/2;
-	target_circle.center.y = target_circle.center.y - camera_rect.center.y + SCREEN_HEIGHT/2;
+	target_circle.center.x = target_circle.center.x - camera_rect.center.x*scale + SCREEN_WIDTH/2;
+	target_circle.center.y = target_circle.center.y - camera_rect.center.y*scale + SCREEN_HEIGHT/2;
 	target_circle.center = rotate_point_about(target_circle.center, camera_rect.center, - camera_rect.angle);
 	return target_circle;
 }
@@ -79,7 +90,7 @@ rect get_animation_rect(sprite_animation anim, float size, char dimension) {
 }
 
 void draw_sprite_anim(SDL_Renderer* renderer, rect camera_rect, sprite_animation* anim, rect target, float elapsed_time_ms) {
-	draw_rectangle(renderer, camera_rect, target);
+	// draw_rectangle(renderer, camera_rect, target, true);
 	target = camera_transform_rect(camera_rect, target);
 	anim->elapsed_seconds += elapsed_time_ms/1000;
 	while(anim->elapsed_seconds > anim->total_seconds) {
@@ -107,9 +118,10 @@ void draw_sprite_anim(SDL_Renderer* renderer, rect camera_rect, sprite_animation
 	}
 }
 
-void draw_rectangle(SDL_Renderer* renderer, rect camera_rect, rect r) {
+void draw_rectangle(SDL_Renderer* renderer, rect camera_rect, rect r, bool highlight_top) {
 	r = camera_transform_rect(camera_rect, r);
 	rect_corners corners = get_rect_corners(r);
+
 	// SDL_Point points[5] = {
 	// 	{corners.upper_left.x, corners.upper_left.y},
 	// 	{corners.upper_right.x, corners.upper_right.y},
@@ -119,18 +131,15 @@ void draw_rectangle(SDL_Renderer* renderer, rect camera_rect, rect r) {
 	// };
 	// SDL_RenderDrawLines(renderer, points, 5);
 
-	// top
-	SDL_SetRenderDrawColor(renderer, 0x80, 0x00, 0xFF, 0xFF);
-	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.upper_right.x, corners.upper_right.y);
-	// bottom
-	SDL_SetRenderDrawColor(renderer, 0x00, 0x80, 0xFF, 0xFF);
+	// non-top
 	SDL_RenderDrawLine(renderer, corners.lower_left.x, corners.lower_left.y, corners.lower_right.x, corners.lower_right.y);
-	// left
-	SDL_SetRenderDrawColor(renderer, 0xFF, 0x80, 0x00, 0xFF);
 	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.lower_left.x, corners.lower_left.y);
-	// right
-	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x80, 0xFF);
 	SDL_RenderDrawLine(renderer, corners.upper_right.x, corners.upper_right.y, corners.lower_right.x, corners.lower_right.y);
+	// top
+	if(highlight_top) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
+	}
+	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.upper_right.x, corners.upper_right.y);
 }
 
 void draw_circle(SDL_Renderer* renderer, rect camera_rect, circle c) {
@@ -204,4 +213,34 @@ void draw_normal_from_point(SDL_Renderer* renderer, physics_object obj, point p)
 	point p2 = move_point_in_direction(p, 50, angle);
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderDrawLine(renderer, p.x, p.y, p2.x, p2.y);
+}
+
+void draw_physics_objects_play_mode(SDL_Renderer* renderer, rect camera_rect, std::vector<physics_object> physics) {
+	for(int i=0; i<physics.size(); i++) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		if(physics[i].collided.size() > 0) {
+			SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+		}
+		if(physics[i].collider == type_circle) {
+			draw_circle(renderer, camera_rect, physics[i].circle_collider);
+		} else {
+			draw_rectangle(renderer, camera_rect, physics[i].rect_collider, true);
+		}
+	}
+}
+
+void draw_physics_objects_edit_mode(SDL_Renderer* renderer, rect camera_rect, std::vector<physics_object> physics, editor_state ed) {
+	for(int i=0; i<physics.size(); i++) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		for(int j=0; j<ed.selected_objects.size(); j++) {
+			if(ed.selected_objects[j]->id == physics[i].id) {
+				SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
+			}
+		}
+		if(physics[i].collider == type_circle) {
+			draw_circle(renderer, camera_rect, physics[i].circle_collider);
+		} else {
+			draw_rectangle(renderer, camera_rect, physics[i].rect_collider, false);
+		}
+	}
 }
