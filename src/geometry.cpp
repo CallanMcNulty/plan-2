@@ -136,8 +136,8 @@ rect get_adjacent_rect(rect rect, char direction, float length) {
 void get_array(rect_corners corners, point* destination_array) {
 	destination_array[0] = corners.upper_left;
 	destination_array[1] = corners.upper_right;
-	destination_array[2] = corners.lower_left;
-	destination_array[3] = corners.lower_right;
+	destination_array[2] = corners.lower_right;
+	destination_array[3] = corners.lower_left;
 }
 
 circle create_circle_s(point center, float radius) {

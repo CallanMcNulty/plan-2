@@ -319,8 +319,11 @@ void update_physics(std::vector<physics_object>* objects, float elapsed_time) {
 
 		bool has_solid_collissions = true;
 		bool collisions_processed = working_object->collided.size() == 0;
-		while(!collisions_processed && has_solid_collissions) {
+		int iteration_count = 0;
+		while(!collisions_processed && has_solid_collissions && iteration_count < 20) {
+			iteration_count ++;
 			has_solid_collissions = false;
+			collisions_processed = true;
 			for(int j=0; j < working_object->collided.size(); j++) {
 				point working_center = get_center(*working_object);
 
@@ -347,114 +350,118 @@ void update_physics(std::vector<physics_object>* objects, float elapsed_time) {
 						// rect - rect
 						rect_corners working_corners = get_rect_corners(working_object->rect_collider);
 						rect_corners comparison_corners = get_rect_corners(comparison_object->rect_collider);
-						physics_object* stabber = nullptr;
-						physics_object* stabbed = nullptr;
-						point stabbing_point;
-						point adjacent_point_a;
-						point adjacent_point_b;
+						point working_rect_corner_array[4];
+						get_array(working_corners, working_rect_corner_array);
+						point comparison_rect_corner_array[4];
+						get_array(comparison_corners, comparison_rect_corner_array);
+						point stabbing_points_of_working_object[4];
+						point stabbing_points_of_comparison_object[4];
+						int working_stabbing_point_count = 0;
+						int comparison_stabbing_point_count = 0;
 						if(point_in_rect(working_corners.lower_left, comparison_corners)) {
-							stabber = working_object;
-							stabbed = comparison_object;
-							stabbing_point = working_corners.lower_left;
-							adjacent_point_a = working_corners.lower_right;
-							adjacent_point_b = working_corners.upper_left;
+							stabbing_points_of_working_object[working_stabbing_point_count] = working_corners.lower_left;
+							working_stabbing_point_count++;
 						} else if(point_in_rect(working_corners.lower_right, comparison_corners)) {
-							stabber = working_object;
-							stabbed = comparison_object;
-							stabbing_point = working_corners.lower_right;
-							adjacent_point_a = working_corners.lower_left;
-							adjacent_point_b = working_corners.upper_right;
+							stabbing_points_of_working_object[working_stabbing_point_count] = working_corners.lower_right;
+							working_stabbing_point_count++;
 						} else if(point_in_rect(working_corners.upper_right, comparison_corners)) {
-							stabber = working_object;
-							stabbed = comparison_object;
-							stabbing_point = working_corners.upper_right;
-							adjacent_point_a = working_corners.lower_right;
-							adjacent_point_b = working_corners.upper_left;
+							stabbing_points_of_working_object[working_stabbing_point_count] = working_corners.upper_right;
+							working_stabbing_point_count++;
 						} else if(point_in_rect(working_corners.upper_left, comparison_corners)) {
-							stabber = working_object;
-							stabbed = comparison_object;
-							stabbing_point = working_corners.upper_left;
-							adjacent_point_a = working_corners.lower_left;
-							adjacent_point_b = working_corners.upper_right;
+							stabbing_points_of_working_object[working_stabbing_point_count] = working_corners.upper_left;
+							working_stabbing_point_count++;
 						} else if(point_in_rect(comparison_corners.lower_left, working_corners)) {
-							stabber = comparison_object;
-							stabbed = working_object;
-							stabbing_point = comparison_corners.lower_left;
-							adjacent_point_a = comparison_corners.lower_right;
-							adjacent_point_b = comparison_corners.upper_left;
+							stabbing_points_of_comparison_object[comparison_stabbing_point_count] = comparison_corners.lower_left;
+							comparison_stabbing_point_count++;
 						} else if(point_in_rect(comparison_corners.lower_right, working_corners)) {
-							stabber = comparison_object;
-							stabbed = working_object;
-							stabbing_point = comparison_corners.lower_right;
-							adjacent_point_a = comparison_corners.lower_left;
-							adjacent_point_b = comparison_corners.upper_right;
+							stabbing_points_of_comparison_object[comparison_stabbing_point_count] = comparison_corners.lower_right;
+							comparison_stabbing_point_count++;
 						} else if(point_in_rect(comparison_corners.upper_right, working_corners)) {
-							stabber = comparison_object;
-							stabbed = working_object;
-							stabbing_point = comparison_corners.upper_right;
-							adjacent_point_a = comparison_corners.lower_right;
-							adjacent_point_b = comparison_corners.upper_left;
+							stabbing_points_of_comparison_object[comparison_stabbing_point_count] = comparison_corners.upper_right;
+							comparison_stabbing_point_count++;
 						} else if(point_in_rect(comparison_corners.upper_left, working_corners)) {
-							stabber = comparison_object;
-							stabbed = working_object;
-							stabbing_point = comparison_corners.upper_left;
-							adjacent_point_a = comparison_corners.lower_left;
-							adjacent_point_b = comparison_corners.upper_right;
+							stabbing_points_of_comparison_object[comparison_stabbing_point_count] = comparison_corners.upper_left;
+							comparison_stabbing_point_count++;
 						}
-						if(stabber == nullptr) {
-							printf("Detected a collision, but couldn't find a contained point");
-						}
-						std::string directions = "8624";
-						float normal_direction;
-						point edge_p1;
-						point edge_p2;
-						rect_corners stabbed_corners = get_rect_corners(stabbed->rect_collider);
-						for(int k=0; k<4; k++) {
-							normal_direction = get_normal_for_rectangle_by_direction(
-								stabbed->rect_collider, directions[k], create_point_s(NAN, NAN)
-							);
-							float adjacent_angle_a = atan2(stabbing_point.y - adjacent_point_a.y, stabbing_point.x - adjacent_point_a.x);
-							float adjacent_angle_b = atan2(stabbing_point.y - adjacent_point_b.y, stabbing_point.x - adjacent_point_b.x);
-							float least_angle_between = std::min(
-								get_real_angle_between(normal_direction, adjacent_angle_a),
-								get_real_angle_between(normal_direction, adjacent_angle_b)
-							);
-							if(least_angle_between >= M_PI/2) {
-								switch(directions[k]) {
-									case('8') : {
-										edge_p1 = stabbed_corners.upper_left;
-										edge_p2 = stabbed_corners.upper_right;
-										break;
-									} case('6') : {
-										edge_p1 = stabbed_corners.lower_right;
-										edge_p2 = stabbed_corners.upper_right;
-										break;
-									} case('4') : {
-										edge_p1 = stabbed_corners.lower_left;
-										edge_p2 = stabbed_corners.upper_left;
-										break;
-									} case('2') : {
-										edge_p1 = stabbed_corners.lower_left;
-										edge_p2 = stabbed_corners.lower_right;
-										break;
+						if(working_stabbing_point_count == 0 && comparison_stabbing_point_count == 0) {
+						} else {
+							physics_object* final_stabber = nullptr;
+							physics_object* final_stabbed = nullptr;
+							float final_normal;
+							float final_distance = 999999;
+							std::string directions = "8624";
+							for(int k=0; k<4; k++) {
+								for(int l=0; l<2; l++) {
+									physics_object* stabber = l==0? working_object : comparison_object;
+									physics_object* stabbed = l==0? comparison_object : working_object;
+									point* stabbing_points = l==0? stabbing_points_of_working_object : stabbing_points_of_comparison_object;
+									int stabbing_point_count = l==0? working_stabbing_point_count : comparison_stabbing_point_count;
+									rect_corners stabbed_corners = l==0? comparison_corners : working_corners;
+
+									float normal_direction = get_normal_for_rectangle_by_direction(
+										stabbed->rect_collider, directions[k], create_point_s(NAN, NAN)
+									);
+									point edge_p1;
+									point edge_p2;
+									switch(directions[k]) {
+										case('8') : {
+											edge_p1 = stabbed_corners.upper_left;
+											edge_p2 = stabbed_corners.upper_right;
+											break;
+										} case('6') : {
+											edge_p1 = stabbed_corners.lower_right;
+											edge_p2 = stabbed_corners.upper_right;
+											break;
+										} case('4') : {
+											edge_p1 = stabbed_corners.lower_left;
+											edge_p2 = stabbed_corners.upper_left;
+											break;
+										} case('2') : {
+											edge_p1 = stabbed_corners.lower_left;
+											edge_p2 = stabbed_corners.lower_right;
+											break;
+										}
+									}
+									float least_movement_distance_per_direction = 999999;
+									for(int m=0; m<stabbing_point_count; m++) {
+										point stabbing_point = stabbing_points[m];
+										point edge_intersection = get_intersection(
+											edge_p1, edge_p2,
+											stabbing_point,
+											move_point_in_direction(
+												stabbing_point,
+												std::max(stabbed->rect_collider.width, stabbed->rect_collider.height),
+												normal_direction
+											),
+											false
+										);
+										if(!isnan(edge_intersection.x)){
+											// - 0.1 to move slightly less than the full distance in order to stay collided next frame
+											float movement_distance = distance(stabbing_point, edge_intersection) - 0.1;
+											least_movement_distance_per_direction = std::min(
+												least_movement_distance_per_direction,
+												movement_distance
+											);
+										} else {
+											printf("no intersection\n");
+										}
+									}
+									if(least_movement_distance_per_direction < final_distance) {
+										final_distance = least_movement_distance_per_direction;
+										final_normal = normal_direction;
+										final_stabber = stabber;
+										final_stabbed = stabbed;
 									}
 								}
-								break;
+							}
+							if(final_stabber == nullptr) {
+								printf("Could not determine direction of movement\n");
+							} else {
+								new_position = move_point_in_direction(
+									working_center, final_distance, working_object == final_stabber ? final_normal : final_normal - M_PI
+								);
 							}
 						}
-						normal_direction += M_PI;
-						point edge_intersection = get_intersection(
-							edge_p1, edge_p2,
-							stabbing_point,
-							move_point_in_direction(
-								stabbing_point, std::max(stabber->rect_collider.width, stabber->rect_collider.height), normal_direction
-							), true
-						);
-						// - 0.1 to move slightly less than the full distance in order to stay collided next frame
-						float movement_distance = distance(stabbing_point, edge_intersection) - 0.1;
-						new_position = move_point_in_direction(
-							working_center, movement_distance, working_object == stabber ? normal_direction - M_PI : normal_direction
-						);
 
 					} else if(working_object->collider != comparison_object->collider) {
 						// circle - rect
@@ -529,27 +536,17 @@ void update_physics(std::vector<physics_object>* objects, float elapsed_time) {
 										working_center, the_circle.radius - distance(the_circle.center, point_on_edge), normal + M_PI
 									);
 								}
-							} else {
-								printf("in\n");
 							}
 						}
 					}
-					if(working_object->collider == type_circle) {
-						if(approx_equals(working_object->circle_collider.center, new_position)) {
-							collisions_processed = true;
-						} else {
-							printf("(%f, %f), (%f, %f)\n", working_object->circle_collider.center.x, working_object->circle_collider.center.x, new_position.x, new_position.y);
-							working_object->circle_collider.center.x = new_position.x;
-							working_object->circle_collider.center.y = new_position.y;
-						}
-					} else {
-						if(approx_equals(working_object->rect_collider.center, new_position)) {
-							collisions_processed = true;
-						} else {
-							printf("(%f, %f), (%f, %f)\n", working_object->rect_collider.center.x, working_object->rect_collider.center.x, new_position.x, new_position.y);
-							working_object->rect_collider.center.x = new_position.x;
-							working_object->rect_collider.center.y = new_position.y;
-						}
+					if(working_object->collider == type_circle && !approx_equals(working_object->circle_collider.center, new_position)) {
+						working_object->circle_collider.center.x = new_position.x;
+						working_object->circle_collider.center.y = new_position.y;
+						collisions_processed = false;
+					} else if(!approx_equals(working_object->rect_collider.center, new_position)) {
+						working_object->rect_collider.center.x = new_position.x;
+						working_object->rect_collider.center.y = new_position.y;
+						collisions_processed = false;
 					}
 
 					// find how slanted the collided object is
@@ -578,6 +575,9 @@ void update_physics(std::vector<physics_object>* objects, float elapsed_time) {
 					still_supported = true;
 				}
 			}
+		}
+		if(iteration_count > 18) {
+			printf("Many collision handling iterations\n");
 		}
 		// Remove supporter if we've left the ground
 		if(!still_supported) {

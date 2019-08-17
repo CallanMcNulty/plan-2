@@ -131,6 +131,17 @@ void draw_rectangle(SDL_Renderer* renderer, rect camera_rect, rect r, bool highl
 	// };
 	// SDL_RenderDrawLines(renderer, points, 5);
 
+	// normals
+	// float normal_count = 120;
+	// for(int i=0; i<normal_count; i++) {
+	// 	float angle = (M_PI * 2 * i) / normal_count;
+	// 	point external = move_point_in_direction(r.center, std::max(r.width, r.height), angle);
+	// 	draw_circle(renderer, camera_rect, create_circle_s(external, 3));
+	// 	float normal = get_normal_for_rectangle_by_direction(r, get_containing_adjacent_rect_for_point(r, external), external);
+	// 	point normal_moved_pt = move_point_in_direction(external, 15, normal);
+	// 	SDL_RenderDrawLine(renderer, external.x, external.y, normal_moved_pt.x, normal_moved_pt.y);
+	// }
+
 	// non-top
 	SDL_RenderDrawLine(renderer, corners.lower_left.x, corners.lower_left.y, corners.lower_right.x, corners.lower_right.y);
 	SDL_RenderDrawLine(renderer, corners.upper_left.x, corners.upper_left.y, corners.lower_left.x, corners.lower_left.y);
