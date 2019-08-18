@@ -40,6 +40,7 @@ typedef struct physics_object {
 physics_object create_rect_physics_object(std::vector<physics_object>* space, rect r, int collision_index);
 physics_object create_circle_physics_object(std::vector<physics_object>* space, circle c, int collision_index);
 movement* get_movement_by_id(physics_object* obj, int id);
+point get_center(physics_object obj);
 void set_movement_along(physics_object* mover, float speed);
 char get_containing_adjacent_rect_for_point(rect r, point p);
 float get_normal_for_rectangle_by_direction(rect r, char direction, point p);

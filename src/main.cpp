@@ -167,7 +167,7 @@ int main(int argc, char* args[]) {
 
 				move(&camera, elapsed_time);
 			} else if(mode == 'e') {
-				update_editor_state(&editor, &physics, controls);
+				update_editor_state(&editor, &physics, controls, camera.rect_collider);
 			}
 
 			if(key_control_tapped(controls, CTRL_SWITCH_MODE)) {
@@ -199,6 +199,7 @@ int main(int argc, char* args[]) {
 
 			if(mode == 'e') {
 				draw_physics_objects_edit_mode(renderer, camera.rect_collider, physics, editor);
+				draw_editor_extras(renderer, camera.rect_collider, editor, controls);
 			} else {
 				draw_physics_objects_play_mode(renderer, camera.rect_collider, physics);
 			}
@@ -211,10 +212,6 @@ int main(int argc, char* args[]) {
 				if(mode == 'p') {
 					SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 				} else if(mode == 'e') {
-					// draw cursor in edit mode
-					SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-					draw_circle(renderer, camera.rect_collider, create_circle_s(controls.mouse_world_position, 8*ratio));
-
 					SDL_SetRenderDrawColor(renderer, 0xFF, 0x80, 0x00, 0xFF);
 				}
 				for(int i=1; i<4; i++) {

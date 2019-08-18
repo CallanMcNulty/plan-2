@@ -17,6 +17,16 @@ point reverse_camera_transform_point(rect camera_rect, point screen_point) {
 	return screen_point;
 }
 
+point camera_transform_point(rect camera_rect, point p) {
+	float scale = (float)SCREEN_WIDTH/camera_rect.width;
+	p.x *= scale;
+	p.y *= scale;
+	p.x = p.x - camera_rect.center.x*scale + SCREEN_WIDTH/2;
+	p.y = p.y - camera_rect.center.y*scale + SCREEN_HEIGHT/2;
+	p = rotate_point_about(p, camera_rect.center, - camera_rect.angle);
+	return p;
+}
+
 rect camera_transform_rect(rect camera_rect, rect target_rect) {
 	float scale = (float)SCREEN_WIDTH/camera_rect.width;
 	target_rect.width *= scale;
@@ -254,4 +264,38 @@ void draw_physics_objects_edit_mode(SDL_Renderer* renderer, rect camera_rect, st
 			draw_rectangle(renderer, camera_rect, physics[i].rect_collider, false);
 		}
 	}
+}
+
+void draw_editor_extras(SDL_Renderer* renderer, rect camera_rect, editor_state ed, controls_state controls) {
+	float ratio = camera_rect.width/(float)SCREEN_WIDTH;
+	// draw rotation guide
+	if(ed.click_mode == CLICK_SET_ROTATE_ORIGIN || ed.click_mode == CLICK_ROTATE_DRAG) {
+		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0xFF, 0xFF);
+		if(ed.click_mode == CLICK_ROTATE_DRAG) {
+			draw_circle(renderer, camera_rect, create_circle_s(ed.rotate_origin, 8*ratio));
+			point screen_origin_point = camera_transform_point(camera_rect, ed.rotate_origin);
+			SDL_RenderDrawLine(renderer, screen_origin_point.x, screen_origin_point.y, controls.mouse_position.x, controls.mouse_position.y);
+		}
+	}
+	// draw scale guide
+	if(ed.click_mode == CLICK_SET_SCALE_ORIGIN || ed.click_mode == CLICK_SCALE_DRAG) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0xFF, 0xFF);
+		if(ed.click_mode == CLICK_SCALE_DRAG) {
+			draw_circle(renderer, camera_rect, create_circle_s(ed.scale_origin, 8*ratio));
+			point screen_origin_point = camera_transform_point(camera_rect, ed.scale_origin);
+			SDL_RenderDrawLine(renderer, screen_origin_point.x, screen_origin_point.y, controls.mouse_position.x, controls.mouse_position.y);
+		}
+	}
+	// draw selection box
+	if(ed.click_mode == CLICK_SELECT && !isnan(ed.box_select_origin.x)) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
+		draw_rectangle(renderer, camera_rect, ed.selection_box, false);
+	}
+	// draw cursor crosshair
+	SDL_RenderDrawLine(
+		renderer, controls.mouse_position.x, controls.mouse_position.y + 8, controls.mouse_position.x, controls.mouse_position.y - 8
+	);
+	SDL_RenderDrawLine(
+		renderer, controls.mouse_position.x + 8, controls.mouse_position.y, controls.mouse_position.x - 8, controls.mouse_position.y
+	);
 }

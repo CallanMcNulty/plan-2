@@ -68,10 +68,12 @@ void update_controls_state(controls_state* state, Uint8* sdl_key_states, Uint32 
 	// mouse
 	bool left = mouse_button_states & SDL_BUTTON(SDL_BUTTON_LEFT);
 	state->left_mouse_button_clicked = left && !state->left_mouse_button_down;
+	state->left_mouse_button_released = !left && state->left_mouse_button_down;
 	state->left_mouse_button_down = left;
 
 	bool right = mouse_button_states & SDL_BUTTON(SDL_BUTTON_RIGHT);
 	state->right_mouse_button_clicked = right && !state->right_mouse_button_down;
+	state->right_mouse_button_clicked = !right && state->right_mouse_button_down;
 	state->right_mouse_button_down = right;
 
 	state->mouse_moved_x = mouse_position.x - state->mouse_position.x;

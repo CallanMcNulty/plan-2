@@ -11,6 +11,7 @@ const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
 point reverse_camera_transform_point(rect camera_rect, point screen_point);
+point camera_transform_point(rect camera_rect, point p);
 rect camera_transform_rect(rect camera_rect, rect target_rect);
 circle camera_transform_circle(rect camera_rect, circle target_circle);
 
@@ -35,5 +36,6 @@ void draw_normal_from_point(SDL_Renderer* renderer, physics_object obj, point p)
 
 void draw_physics_objects_play_mode(SDL_Renderer* renderer, rect camera_rect, std::vector<physics_object> physics);
 void draw_physics_objects_edit_mode(SDL_Renderer* renderer, rect camera_rect, std::vector<physics_object> physics, editor_state ed);
+void draw_editor_extras(SDL_Renderer* renderer, rect camera_rect, editor_state ed, controls_state controls);
 
 #endif

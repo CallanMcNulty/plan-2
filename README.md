@@ -1,11 +1,14 @@
 TODO
+
 Editor
-	Managing selection
-	Edit physics object
-		Rotate
-		Scale
-	Create physics object
+- Create physics objects
+- Edit grav attractors
+- Edit collision index
+- Undo
 Physics
-	Fix weird rect-rect collision behavior
-	Collisions with object interiors
-	Holes in objects
+- Fix weird rect-rect collision behavior
+- Add angle for circle colliders
+- Collisions with object interiors
+- Holes in objects
+Gameplay
+- Add game entity that associates physics object and graphic
